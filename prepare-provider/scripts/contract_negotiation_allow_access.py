@@ -14,10 +14,13 @@ print("Starting script")
 provider = ResourceApi(provider_url)
 
 ## Create resources
-dataValue = "SOME LONG VALUE"
+dataValue = "5,aaa\n6,bbb\n7,ccc\n"
 catalog = provider.create_catalog()
 offers = provider.create_offered_resource()
-representation = provider.create_representation()
+representation = provider.create_representation(data={"intake_connector_metadata": """{
+    "number": "int",
+    "title": "str"
+}"""})
 artifact = provider.create_artifact(data={"value": dataValue})
 contract = provider.create_contract()
 use_rule = provider.create_rule()
@@ -30,45 +33,54 @@ provider.add_contract_to_resource(offers, contract)
 provider.add_rule_to_contract(contract, use_rule)
 
 print("Created provider resources")
+print("resource", offers)
+print("repr", representation)
+print("artifact", artifact)
 
-# Consumer
-consumer = IdsApi(consumer_url)
+# # Consumer
+# consumer = IdsApi(consumer_url)
 
-# IDS
-# Call description to get all offers
-all_offers = consumer.descriptionRequest(provider_url + "/api/ids/data")
-print("All Offers")
-pprint.pprint(all_offers)
-# Call description for a spec offer?
-offer = consumer.descriptionRequest(provider_url + "/api/ids/data", offers)
-print("Offer")
-pprint.pprint(offer)
+# # IDS
+# # Call description to get all offers
+# all_offers = consumer.descriptionRequest(provider_url + "/api/ids/data")
+# print("All Offers")
+# pprint.pprint(all_offers)
+# # Call description for a spec offer, I use the one created above, but you may retrieve it from all_offers
+# offer = consumer.descriptionRequest(provider_url + "/api/ids/data", offers)
+# print("Offer", offers)
+# pprint.pprint(offer)
 
-# Negotiate contract
-obj = offer["ids:contractOffer"][0]["ids:permission"][0]
-obj["ids:target"] = artifact
-response = consumer.contractRequest(
-    provider_url + "/api/ids/data", offers, artifact, False, obj
-)
+# # Negotiate contract
+# obj = offer["ids:contractOffer"][0]["ids:permission"][0]
+# # You will agree to the provided contract offer by using it for the contract request without content changes.
+# # You just have to add the artifact id as ids:target to the rule.
+# obj["ids:target"] = artifact
+# print("Obj")
+# pprint.pprint(obj)
+# print("Offer", offers)
+# pprint.pprint(offer)
+# response = consumer.contractRequest(
+#     provider_url + "/api/ids/data", offers, artifact, False, obj
+# )
 
-print("Response")
-pprint.pprint(response)
+# print("Response")
+# pprint.pprint(response)
 
-# Pull data
-agreement = response["_links"]["self"]["href"]
+# # Pull data
+# agreement = response["_links"]["self"]["href"]
 
-consumerResources = ResourceApi(consumer_url)
-artifacts = consumerResources.get_artifacts_for_agreement(agreement)
-print("Artifacts")
-pprint.pprint(artifacts)
+# consumerResources = ResourceApi(consumer_url)
+# artifacts = consumerResources.get_artifacts_for_agreement(agreement)
+# print("Artifacts")
+# pprint.pprint(artifacts)
 
-first_artifact = artifacts["_embedded"]["artifacts"][0]["_links"]["self"]["href"]
-pprint.pprint(first_artifact)
+# first_artifact = artifacts["_embedded"]["artifacts"][0]["_links"]["self"]["href"]
+# pprint.pprint(first_artifact)
 
-data = consumerResources.get_data(first_artifact).text
-pprint.pprint(data)
+# data = consumerResources.get_data(first_artifact).text
+# pprint.pprint(data)
 
-if data != dataValue:
-    exit(1)
+# if data != dataValue:
+#     exit(1)
 
-exit(0)
+# exit(0)

@@ -15,6 +15,7 @@ requirements:
   run:
     - intake
     - pandas
+    - requests
 
 about:
   home: url
