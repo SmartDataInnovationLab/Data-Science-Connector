@@ -1,0 +1,63 @@
+from intake.catalog import Catalog
+from intake.catalog.local import LocalCatalogEntry
+
+from .resourceapi import ResourceApi
+from .idsapi import IdsApi
+
+class ConnectorCatalog(Catalog):
+    # if only one catalog in ids, use it. otherwise load all
+    def __init__(self, provider_url, consumer_url, name, catalog_id=None, metadata=None, **kwargs):
+        self.provider_url = provider_url
+        self.consumer_url = consumer_url
+        self.catalog_id = catalog_id
+
+        self.consumer = IdsApi(consumer_url)
+        self.consumerResources = ResourceApi(consumer_url)
+        self.recipient_url = self.provider_url + "/api/ids/data"
+
+        self._offers = {}
+
+        super().__init__(name=name, metadata=metadata, **kwargs)
+
+    def _load(self):
+        if self.catalog_id is not None:
+            self._load_catalog(self.catalog_id)
+        else:
+            connector = self.consumer.descriptionRequest(self.recipient_url)
+            for cat in connector['ids:resourceCatalog']:
+                self._load_catalog(cat['@id'])
+
+    def _load_catalog(self, catalog_id):
+        catalog = self.consumer.descriptionRequest(self.recipient_url, catalog_id)
+        for res in catalog['ids:offeredResource']:
+            self._load_resource(resource_id = res['@id'])
+    
+    def _load_resource(self, resource_id=None, resource=None):
+        if resource_id is not None: 
+            resource = self.consumer.descriptionRequest(self.recipient_url, resource_id)
+        
+        for rep in resource['ids:representation']:
+            self._load_repr(resource = resource, repr_id=rep['@id'])
+
+    def _load_repr(self, resource, repr_id=None, repr=None):
+        if repr_id is not None: 
+            repr = self.consumer.descriptionRequest(self.recipient_url, repr_id)
+        
+        if is_processable_representation(repr):
+            self._entries[repr['@id']] = ConnectorEntry(
+                representation = repr,
+                resource = resource,
+                provider_url = self.provider_url,
+                consumer_url = self.consumer_url
+            )
+        
+def is_processable_representation(repr):
+    #mimetype, args
+    return True
+
+class ConnectorEntry(LocalCatalogEntry):
+    def __init__(self, representation, resource, provider_url, consumer_url):
+        # driver, args = get_relevant_distribution(entry, priority)
+        name = representation['@id']
+        description = f"## {resource['ids:title'][0]['@value']}\n\n{resource['ids:desciption'][0]['@value']}\n\nrepresentation: {representation['@id']}"
+        super().__init__(name, description, driver, True, args=args, metadata=metadata)

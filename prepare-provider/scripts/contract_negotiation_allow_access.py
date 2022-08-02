@@ -17,7 +17,7 @@ provider = ResourceApi(provider_url)
 dataValue = "5,aaa\n6,bbb\n7,ccc\n"
 catalog = provider.create_catalog()
 offers = provider.create_offered_resource()
-representation = provider.create_representation(data={"intake_connector_metadata": """{
+representation = provider.create_representation(data={"dtypes": """{
     "number": "int",
     "title": "str"
 }"""})
