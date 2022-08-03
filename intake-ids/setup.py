@@ -15,7 +15,8 @@ setup(
     long_description="",
     entry_points={
         'intake.drivers': [
-            'connector = intake_ids:ConnectorSource',
+            'connector_csv = intake_ids:ConnectorCSVSource',
+            'connector = intake_ids.catalog:ConnectorCatalog'
         ]
     },
     zip_safe=False,

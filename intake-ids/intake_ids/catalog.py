@@ -1,5 +1,7 @@
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
+from intake_ids.connector_source import driver_args
+from intake_ids.sources import get_source_for_representation
 
 from .resourceapi import ResourceApi
 from .idsapi import IdsApi
@@ -43,7 +45,7 @@ class ConnectorCatalog(Catalog):
         if repr_id is not None: 
             repr = self.consumer.descriptionRequest(self.recipient_url, repr_id)
         
-        if is_processable_representation(repr):
+        if repr and is_processable_representation(repr):
             self._entries[repr['@id']] = ConnectorEntry(
                 representation = repr,
                 resource = resource,
@@ -52,12 +54,15 @@ class ConnectorCatalog(Catalog):
             )
         
 def is_processable_representation(repr):
-    #mimetype, args
-    return True
+    return get_source_for_representation(repr) is not None
 
 class ConnectorEntry(LocalCatalogEntry):
     def __init__(self, representation, resource, provider_url, consumer_url):
-        # driver, args = get_relevant_distribution(entry, priority)
+        driver, args = get_source_for_representation(representation)
+        connector_args = driver_args(representation, resource, provider_url, consumer_url)
         name = representation['@id']
-        description = f"## {resource['ids:title'][0]['@value']}\n\n{resource['ids:desciption'][0]['@value']}\n\nrepresentation: {representation['@id']}"
-        super().__init__(name, description, driver, True, args=args, metadata=metadata)
+        description = f"""## {resource['ids:title'][0]['@value']}
+{resource['ids:description'][0]['@value']}
+
+representation: {representation['@id']}"""
+        super().__init__(name, description, driver, True, args={ **args, **connector_args })

@@ -1,19 +1,19 @@
-import io
 import json
 from intake.source import base
 from abc import ABCMeta, abstractmethod
-import pandas as pd
 
 from .idsapi import IdsApi
 from .resourceapi import ResourceApi
 
-class ConnectorSource(base.DataSource):
-    container = 'dataframe'
-    # how to deal with multiple dataframes / set of series?
-    version = '0.0.1'
-    partition_access = False
-    name = 'connector'
+def driver_args(representation, resource, provider_url, consumer_url):
+    return {
+        "provider_url": provider_url,
+        "consumer_url": consumer_url,
+        "representation": representation['@id'],
+        "resource": resource['@id'],
+    }
 
+class ConnectorSource(base.DataSource, metaclass=ABCMeta):
     def __init__(self, provider_url, consumer_url, resource, representation, metadata=None):
         self.provider_url = provider_url
         self.consumer_url = consumer_url
@@ -56,22 +56,13 @@ class ConnectorSource(base.DataSource):
         
         return self.consumerResources.get_data(first_artifact).content
 
+    @abstractmethod
     def _get_schema(self):
-        # schema will depend on offer metadata
-        self._dtypes = self.ids_metadata()
-        
-        return base.Schema(
-            datashape=None,
-            dtype=self._dtypes,
-            shape=(None, len(self._dtypes)),
-            npartitions=1,  # This data is not partitioned, so there is only one partition
-            extra_metadata={}
-        )
+        pass
 
+    @abstractmethod
     def _get_partition(self, _):
-        content = self.ids_data()
-
-        return pd.read_csv(io.StringIO(content.decode('utf-8')), names=self._dtypes.keys())
-        
+        pass
+    
     def _close(self):
         pass

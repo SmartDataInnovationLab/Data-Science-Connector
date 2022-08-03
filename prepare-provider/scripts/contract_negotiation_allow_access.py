@@ -17,10 +17,10 @@ provider = ResourceApi(provider_url)
 dataValue = "5,aaa\n6,bbb\n7,ccc\n"
 catalog = provider.create_catalog()
 offers = provider.create_offered_resource()
-representation = provider.create_representation(data={"dtypes": """{
-    "number": "int",
-    "title": "str"
-}"""})
+representation = provider.create_representation(data={
+    "dtypes": "{\"number\": \"int\", \"title\": \"str\"}",
+    "mimetype": "text/csv"
+})
 artifact = provider.create_artifact(data={"value": dataValue})
 contract = provider.create_contract()
 use_rule = provider.create_rule()
