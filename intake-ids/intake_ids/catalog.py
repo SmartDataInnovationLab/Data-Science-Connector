@@ -26,19 +26,19 @@ class ConnectorCatalog(Catalog):
             self._load_catalog(self.catalog_id)
         else:
             connector = self.consumer.descriptionRequest(self.recipient_url)
-            for cat in connector['ids:resourceCatalog']:
+            for cat in connector.get('ids:resourceCatalog', []):
                 self._load_catalog(cat['@id'])
 
     def _load_catalog(self, catalog_id):
         catalog = self.consumer.descriptionRequest(self.recipient_url, catalog_id)
-        for res in catalog['ids:offeredResource']:
+        for res in catalog.get('ids:offeredResource', []):
             self._load_resource(resource_id = res['@id'])
     
     def _load_resource(self, resource_id=None, resource=None):
         if resource_id is not None: 
             resource = self.consumer.descriptionRequest(self.recipient_url, resource_id)
         
-        for rep in resource['ids:representation']:
+        for rep in resource.get('ids:representation', []):
             self._load_repr(resource = resource, repr_id=rep['@id'])
 
     def _load_repr(self, resource, repr_id=None, repr=None):

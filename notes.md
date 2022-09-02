@@ -1,13 +1,16 @@
-- mimetypes
-    - json
-    - csv
+- [ ] mimetypes
+    - [ ] json
+    - [x] csv
 
-- catalogs
+- [x] catalogs
     - https://github.com/CityOfLosAngeles/intake-dcat
 
 - contracts
+    / we get a new agreement every time, how to proceed?
     - cache (location/deletion/duration)
     - cache as a proxy before consumer (dask persist)
+
+    - reuse repr/res
 
 - key agent (later)
     - eclipse conenctor
@@ -15,3 +18,21 @@
     - BA not alway about implementation, talk about secutiry model in thesis, no implementation
 
     - data plane transfer client can be used for filling the cache
+
+    - eclipse as na outlook / or implemenrt
+
+
+- evaluation
+    - need way better documentation
+    - prep task
+    - something easy like avg, mean calculation
+    - sus etc.
+    - control group? just give them the task, see how they do
+    - treatment group > give info about this package
+
+    - both: IDS satisfaction with both of them
+
+    - negative eff: caching mmagixc?
+
+    - infra: colab/forms
+    - consider rewards to even out motivation / use ppl from the project

@@ -24,25 +24,17 @@ class ConnectorSource(base.DataSource, metaclass=ABCMeta):
 
         super(ConnectorSource, self).__init__(metadata=metadata)
 
-    def ids_artifact(self):
+    def ids_get_artifact(self):
         rep = self.consumer.descriptionRequest(self.provider_url + "/api/ids/data", self.representation)
         if not "ids:instance" in rep or len(rep["ids:instance"]) <= 0:
-            raise ValueError('Representation doesn\'t contain artifact')
+            raise ValueError('Representation doesn\'t contain any artifacts')
 
         return rep["ids:instance"][0]["@id"]
-
-    def ids_metadata(self):
-        rep = self.consumer.descriptionRequest(self.provider_url + "/api/ids/data", self.representation)
-        if not "dtypes" in rep:
-            raise ValueError('Representation doesn\'t contain intake dtypes')
-        dtypes = json.loads(rep["dtypes"])
-
-        return dtypes
 
     def ids_data(self):
         offer = self.consumer.descriptionRequest(self.provider_url + "/api/ids/data", self.resource)
         obj = offer["ids:contractOffer"][0]["ids:permission"][0]
-        artifact = self.ids_artifact()
+        artifact = self.ids_get_artifact()
         obj["ids:target"] = artifact
 
         response = self.consumer.contractRequest(
@@ -51,6 +43,7 @@ class ConnectorSource(base.DataSource, metaclass=ABCMeta):
 
         # Pull data
         agreement = response["_links"]["self"]["href"]
+        ## do something with the rule
         artifacts = self.consumerResources.get_artifacts_for_agreement(agreement)
         first_artifact = artifacts["_embedded"]["artifacts"][0]["_links"]["self"]["href"]
         

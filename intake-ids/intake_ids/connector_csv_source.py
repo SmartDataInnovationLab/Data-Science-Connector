@@ -13,13 +13,10 @@ class ConnectorCSVSource(ConnectorSource):
         super().__init__(*args, **kwargs)
 
     def _get_schema(self):
-        # schema will depend on offer metadata
-        self._dtypes = self.ids_metadata()
-        
         return base.Schema(
             datashape=None,
-            dtype=self._dtypes,
-            shape=(None, len(self._dtypes)),
+            dtype=None,
+            shape=None,
             npartitions=1,  # This data is not partitioned, so there is only one partition
             extra_metadata={}
         )
@@ -28,4 +25,4 @@ class ConnectorCSVSource(ConnectorSource):
         self._get_schema()
         content = self.ids_data()
 
-        return pd.read_csv(io.StringIO(content.decode('utf-8')), names=self._dtypes.keys())
+        return pd.read_csv(io.StringIO(content.decode('utf-8')))
