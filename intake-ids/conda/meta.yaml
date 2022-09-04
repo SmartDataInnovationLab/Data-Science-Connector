@@ -16,6 +16,7 @@ requirements:
     - intake
     - pandas
     - requests
+    - pydantic
 
 about:
   home: url

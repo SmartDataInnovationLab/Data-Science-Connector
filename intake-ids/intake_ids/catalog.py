@@ -1,6 +1,6 @@
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
-from intake_ids.connector_source import driver_args
+from intake_ids.connector_controller import driver_args
 from intake_ids.sources import get_source_for_representation
 
 from .resourceapi import ResourceApi
@@ -42,7 +42,7 @@ class ConnectorCatalog(Catalog):
             self._load_repr(resource = resource, repr_id=rep['@id'])
 
     def _load_repr(self, resource, repr_id=None, repr=None):
-        if repr_id is not None: 
+        if repr_id is not None:
             repr = self.consumer.descriptionRequest(self.recipient_url, repr_id)
         
         if repr and is_processable_representation(repr):
@@ -61,8 +61,6 @@ class ConnectorEntry(LocalCatalogEntry):
         driver, args = get_source_for_representation(representation)
         connector_args = driver_args(representation, resource, provider_url, consumer_url)
         name = representation['@id']
-        description = f"""## {resource['ids:title'][0]['@value']}
-{resource['ids:description'][0]['@value']}
-
-representation: {representation['@id']}"""
-        super().__init__(name, description, driver, True, args={ **args, **connector_args })
+        description = f"""{resource['ids:title'][0]['@value']}
+{resource['ids:description'][0]['@value']}"""
+        super().__init__(name, description, driver, True, args={ **args, 'ids_kwargs': connector_args })

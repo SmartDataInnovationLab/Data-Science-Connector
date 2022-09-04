@@ -36,3 +36,15 @@
 
     - infra: colab/forms
     - consider rewards to even out motivation / use ppl from the project
+
+
+- problems
+    - remote artifacts can't be generalized at all.
+
+- cite:
+    - idsa position paper usage control:
+        - 34 table
+        - 26 leaks
+
+- use cases:
+    - first partition provide access, later until deletion / duration

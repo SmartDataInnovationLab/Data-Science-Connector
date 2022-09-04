@@ -6,14 +6,12 @@ from idsapi import IdsApi
 import pprint
 import sys
 
-provider_url = "http://provider-dataspace-connector"
-consumer_url = "http://consumer-dataspace-connector"
+provider_url = "https://provider:8080"
+consumer_url = "https://consumer:8080"
 
 
 def main(argv):
     if len(argv) == 2:
-        provider_url = argv[0]
-        consumer_url = argv[1]
         print("Setting provider alias as:", provider_url)
         print("Setting consumer alias as:", consumer_url)
 
@@ -198,6 +196,9 @@ count["ids:target"] = artifactId2
 body = [notify, count]
 resources = [resourceId1, resourceId2]
 artifacts = [artifactId1, artifactId2]
+pprint.pprint(body)
+pprint.pprint(resources)
+pprint.pprint(artifacts)
 response = consumer.contractRequest(
     provider_url + "/api/ids/data", resources, artifacts, True, body
 )

@@ -1,15 +1,9 @@
-
-
 import requests
 import json
 import re
 
 # Suppress ssl verification warning
 requests.packages.urllib3.disable_warnings()
-
-# Suppress ssl verification warning
-requests.packages.urllib3.disable_warnings()
-
 
 class ResourceApi:
     session = None
@@ -37,10 +31,6 @@ class ResourceApi:
     def create_artifact(self, data={"value": "SOME LONG VALUE"}):
         response = self.session.post(self.recipient + "/api/artifacts", json=data)
         return response.headers["Location"]
-
-    def update_artifact(self, artifact, data) -> bool:
-        response = self.session.put(artifact, json=data)
-        return response.status_code == 204
 
     def create_contract(
         self,
@@ -85,16 +75,6 @@ class ResourceApi:
         response = self.session.post(self.recipient + "/api/rules", json=data)
         return response.headers["Location"]
 
-    def create_route(self, data={"deploy": "Camel"}):
-        response = self.session.post(self.recipient + "/api/routes", json=data)
-        return response.headers["Location"]
-
-    def create_endpoint(
-        self, data={"location": "http://localhost:8080", "type": "GENERIC"}
-    ):
-        response = self.session.post(self.recipient + "/api/endpoints", json=data)
-        return response.headers["Location"]
-
     def add_resource_to_catalog(self, catalog, resource):
         return self.session.post(
             catalog + "/offers", json=self.toListIfNeeded(resource)
@@ -123,20 +103,6 @@ class ResourceApi:
     def add_rule_to_contract(self, contract, rule):
         return self.session.post(contract + "/rules", json=self.toListIfNeeded(rule))
 
-    def add_start_endpoint_to_route(self, route, endpoint):
-        uuid = self.uuid_from_uri(endpoint)
-        return self.session.put(route + "/endpoint/start", json=uuid)
-
-    def add_end_endpoint_to_route(self, route, endpoint):
-        uuid = self.uuid_from_uri(endpoint)
-        return self.session.put(route + "/endpoint/end", json=uuid)
-
-    def uuid_from_uri(self, uri):
-        uuids = re.findall(
-            "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-?[0-9a-f]{12}", uri
-        )
-        return uuids[0]
-
     def toListIfNeeded(self, obj):
         if isinstance(obj, list):
             return obj
@@ -146,20 +112,11 @@ class ResourceApi:
     def get_data(self, artifact):
         return self.session.get(artifact + "/data")
 
-    def get_data_with_route(self, artifact, route):
-        return self.session.get(artifact + "/data", params={"routeIds": route})
-
-    def set_data(self, artifact, data):
-        return self.session.put(artifact + "/data", data=data)
+    def stream_data(self, artifact):
+        return self.session.get(artifact + "/data", stream=True)
 
     def get_artifacts_for_agreement(self, agreement):
         return json.loads(self.session.get(agreement + "/artifacts").text)
-
-    def get_requested_artifact(self):
-        agreements = json.loads(self.session.get(self.recipient + "/api/agreements").text)
-        agreement = agreements["_embedded"]["agreements"][0]["_links"]["self"]["href"]
-        artifacts = json.loads(self.session.get(agreement + "/artifacts").text)
-        return artifacts["_embedded"]["artifacts"][0]["_links"]["self"]["href"]
 
     def get_data_force_download(self, artifact):
         params = {'download': 'true'}

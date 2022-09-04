@@ -1,28 +1,33 @@
-from .connector_source import ConnectorSource
+from .connector_controller import ConnectorController
 from intake.source import base
-import pandas as pd
-import io
+from io import StringIO
 
-class ConnectorCSVSource(ConnectorSource):
+class ConnectorCSVSource(base.DataSource):
     container = 'dataframe'
     version = '0.0.1'
-    partition_access = False
+    partition_access = True
     name = 'connector_csv'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, ids_kwargs=None, csv_kwargs=None, metadata=None):
+        self.ids = ConnectorController(**ids_kwargs)
+
+        super(ConnectorCSVSource, self).__init__(metadata=metadata)
 
     def _get_schema(self):
         return base.Schema(
             datashape=None,
             dtype=None,
             shape=None,
-            npartitions=1,  # This data is not partitioned, so there is only one partition
+            npartitions=self.ids.num_partitions(),
             extra_metadata={}
         )
 
-    def _get_partition(self, _):
-        self._get_schema()
-        content = self.ids_data()
-
-        return pd.read_csv(io.StringIO(content.decode('utf-8')))
+    def _get_partition(self, i):
+        import pandas as pd
+        modal = self.ids.get_data_modality(i)
+        if modal.can_filename:
+            return pd.read_csv(modal.filename())
+        elif modal.can_inmemory:
+            return pd.read_csv(StringIO(modal.inmemory().decode('utf-8')))
+        else:
+            raise ValueError('Can\'t access partition')
