@@ -7,5 +7,5 @@ class Action(IDSModel):
     pass
     # truncated, there is more in the full model
 
-DELETE = Action.parse_obj({"@id": "idsc:DELETE"})
-USE = Action.parse_obj({"@id": "idsc:USE"})
+DELETE = Action.parse_obj({"@id": "https://w3id.org/idsa/code/DELETE"})
+USE = Action.parse_obj({"@id": "https://w3id.org/idsa/code/USE"})

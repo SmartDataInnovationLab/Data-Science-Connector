@@ -4,14 +4,27 @@ import os
 from pathlib import Path
 from pydantic import ValidationError
 from .ids_information_model.contract import Contract
-from .usage_control.contract import is_contract_valid
+from .ids_information_model.artifact import Artifact
+from .usage_control.validation import is_contract_valid_for_artifact
 
 CACHE_DIR = os.environ.get('CACHE_DIR') if os.environ.get('CACHE_DIR') is not None else '.intake-ids-cache'
 AGREEMENT = 'agreement.json'
 ARTIFACT = 'artifact.dat'
+ARTIFACT_META = 'artifact.json'
 
 def hash(string: str):
     return hashlib.sha1(string.encode(encoding = 'UTF-8', errors = 'strict')).hexdigest()
+
+def get_jsonfile(path: Path) -> dict | None:
+    if not path.is_file():
+        return None
+
+    with open(path, 'r', encoding="utf8") as f:
+        return json.load(f)
+
+def save_jsonfile(path: Path, obj: dict):
+    with open(path, 'w') as f:
+            json.dump(obj, f, ensure_ascii=False, indent=4)
 
 class Cache():
     def __init__(self, consumer_url, provider_url, resource_url, representation_url) -> None:
@@ -28,36 +41,30 @@ class Cache():
         return self._partition(partition) / AGREEMENT
     def _artifact(self, partition: int) -> Path:
         return self._partition(partition) / ARTIFACT
+    def _artifact_metadata(self, partition: int) -> Path:
+        return self._partition(partition) / ARTIFACT_META
+    def _get_agreement(self, partition: int):
+        return Contract.parse_obj(get_jsonfile(self._agreement(partition)))
+    def _get_artifact_metadata(self, partition: int):
+        return Artifact.parse_obj(get_jsonfile(self._artifact_metadata(partition)))
 
-    def is_cached(self, partition: int) -> bool:
-        if self.path.is_dir() is False:
-            return False
+    def is_cached(self) -> bool:
+        return self.path.is_dir()
 
-        if self._check_validity(partition) is False:
+    def check_validity(self, partition: int) -> bool:
+        try:
+            contract = self._get_agreement(partition)
+            artifact = self._get_artifact_metadata(partition)
+
+            return is_contract_valid_for_artifact(contract, artifact)
+        except (ValidationError, OSError) as e:
+            # print("validation failed")
+            # print(e)
             self.clear(partition)
             return False
 
-        return True
-
-    def _check_validity(self, partition: int) -> bool:
-        try:
-            agreement = self._get_agreement(partition)
-            if agreement is None:
-                return False
-
-            contract = Contract.parse_raw(agreement.get('value', ''))
-            return is_contract_valid(contract)
-        except (ValidationError, OSError) as e:
-            return False
-
-    def _get_agreement(self, partition: int) -> dict | None:
-        if not self._agreement(partition).is_file():
-            return None
-
-        with open(self._agreement(partition), 'r', encoding="utf8") as f:
-            return json.load(f)
-
     def clear(self, partition: int) -> None:
+        display('Clearing')
         import shutil
         if self._partition(partition).exists() and self._partition(partition).is_dir():
             shutil.rmtree(self._partition(partition))
@@ -65,25 +72,27 @@ class Cache():
     def setup(self, partition: int) -> None:
         self._partition(partition).mkdir(parents=True, exist_ok=True)
 
-    def get_agreement(self, partition: int) -> dict | None:
-        if (not self.is_cached(partition)):
+    # Agreements
+    def get_agreement(self, partition: int) -> tuple[Contract, Artifact] | None:
+        if (not self.is_cached() or not self.check_validity(partition)):
             return None
         
-        return self._get_agreement(partition)
+        return self._get_agreement(partition), self._get_artifact_metadata(partition)
     
-    def cache_agreement(self, agreement, partition):
+    def cache_agreement(self, agreement, artifact_metadata, partition):
         self.clear(partition)
         self.setup(partition)
-        with open(self._agreement(partition), 'w') as f:
-            json.dump(agreement, f, ensure_ascii=False, indent=4)
+        save_jsonfile(self._agreement(partition), agreement)
+        save_jsonfile(self._artifact_metadata(partition), artifact_metadata)
 
+    # Artifacts
     def get_artifact_filename(self, partition: int) -> str:
-        if not self.is_cached(partition):
+        if not self.is_cached() or not self.check_validity(partition):
             raise LookupError('Resource is not cached or agreement for the cached resource is no longer valid')
         return str(self._artifact(partition))
 
     def has_artifact(self, partition: int) -> bool:
-        if not self.is_cached(partition):
+        if not self.is_cached() or not self.check_validity(partition):
             return False
         return self._artifact(partition).is_file()
 

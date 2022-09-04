@@ -17,6 +17,7 @@ requirements:
     - pandas
     - requests
     - pydantic
+    - isodate
 
 about:
   home: url

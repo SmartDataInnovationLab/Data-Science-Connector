@@ -1,12 +1,19 @@
 from __future__ import annotations
+import json
 from typing import Any
+from pydantic import ValidationError
+
+from copy import deepcopy
 
 from .idsapi import IdsApi
 from .resourceapi import ResourceApi
 from .cache import Cache
 from .ids_information_model.contract import Contract
-from .usage_control.contract import is_artifact_cacheable, select_contract_by_preferable_rules
-from .exceptions import raise_for_connector_status
+from .ids_information_model.artifact import Artifact
+from .usage_control.contract import is_artifact_cacheable, select_valid_contract_by_preferable_rules
+from .exceptions import ConnectorError, raise_for_connector_status
+from .usage_control.validation import is_contract_valid_for_artifact
+
 
 def driver_args(representation, resource, provider_url, consumer_url):
     return {
@@ -31,46 +38,51 @@ class ConnectorController():
         if not "ids:instance" in rep or len(rep["ids:instance"]) <= 0:
             raise ValueError('Representation doesn\'t contain any artifacts')
 
-        return [x["@id"] for x in rep["ids:instance"]]
+        return rep["ids:instance"]
 
     def _obtain_agreement(self, partition):
         if (self.cache.get_agreement(partition) is not None):
-            agreement = self.cache.get_agreement(partition)
-            return agreement
+            display('Using cache for agreement')
+            return self.cache.get_agreement(partition)
 
+        # select artifact based on partition
         artifacts = self._get_artifacts()
-        artifact = artifacts[partition]
+        artifact_meta_dict = artifacts[partition]
+        artifact_meta = Artifact.parse_obj(artifact_meta_dict)
 
         res = self.consumer.descriptionRequest(self.provider_url + "/api/ids/data", self.resource)
-        offer = select_contract_by_preferable_rules(res["ids:contractOffer"])
+        offer_dict = select_valid_contract_by_preferable_rules(res["ids:contractOffer"], artifact_meta)
 
-        rules = offer.get("ids:permission", []) + offer.get("ids:prohibition", []) + offer.get("ids:obligation", [])
+        if offer_dict is None:
+            raise ConnectorError("No valid contracts available for this resource")
+
+        display('New agreement')
+        # negotiate contract
+        rules = offer_dict.get("ids:permission", []) + offer_dict.get("ids:prohibition", [])
         for rule in rules:
-            rule["ids:target"] = artifact
-        
+            rule["ids:target"] = artifact_meta.id
+
         response: dict = self.consumer.contractRequest(
-            self.provider_url + "/api/ids/data", self.resource, artifact, False, rules
+            self.provider_url + "/api/ids/data", self.resource, artifact_meta.id, False, rules
         )
 
         # make sure we've gotten a contract agreement and not an error message
-        Contract.parse_raw(response.get('value', ''))
+        try:
+            Contract.parse_raw(response.get('value', ''))
+        except ValidationError as e:
+            print(response)
+            raise e
 
-        # display(response)
-        self.cache.cache_agreement(response, partition)
+        agreement_dict = json.loads(response['value'])
+        agreement = Contract.parse_obj(agreement_dict)
 
-        return response
+        self.cache.cache_agreement(agreement_dict, artifact_meta_dict, partition)
+        return agreement, artifact_meta
 
     def get_data_modality(self, partition=0) -> AccessModality:
-        agreement = self._obtain_agreement(partition)
+        agreement, artifact = self._obtain_agreement(partition)
 
-        agreement_content = Contract.parse_raw(agreement['value'])
-        cacheable = is_artifact_cacheable(agreement_content)
-
-        agreement_id = agreement["_links"]["self"]["href"]
-        artifacts = self.consumerResources.get_artifacts_for_agreement(agreement_id)
-        artifact_id = artifacts["_embedded"]["artifacts"][0]["_links"]["self"]["href"]
-
-        return AccessModality(controller=self, cacheable=cacheable, artifact_id=artifact_id, partition=partition)
+        return AccessModality(controller=self, cacheable=is_artifact_cacheable(agreement), artifact_id=artifact.id, partition=partition)
 
     def num_partitions(self):
         return len(self._get_artifacts())
@@ -97,19 +109,27 @@ class AccessModality:
         if not self.cacheable:
             raise PermissionError('artifact is not cacheable')
         
-        if (self._controller.cache.has_artifact(self._partition)):
+        display('We are a cacheable artifact')
+        if self._controller.cache.has_artifact(self._partition):
+            display('Using cache for ARTIFACT')
             return self._controller.cache.get_artifact_filename(self._partition)
 
-        print('streaming to cache')
+        # if contract is not valid (or not valid for artifact), there is nothing we can do, error 
+        if not self._controller.cache.check_validity(self._partition):
+            raise ConnectorError('Agreement for the resource is not valid')
+
+        display('Trying to write new artifact to cache')
         with self._controller.consumerResources.stream_data(self._artifact_id) as r:
             raise_for_connector_status(r)
+            print('streaming to cache')
             self._controller.cache.cache_artifact(r, self._partition)
         
         return self._controller.cache.get_artifact_filename(self._partition)
 
     def inmemory(self):
-        print('bypassed cache')
+        display('We are NOT a cacheable artifact')
         r = self._controller.consumerResources.get_data(self._artifact_id)
         raise_for_connector_status(r)
+        print('bypassed cache')
         return r.content
         
