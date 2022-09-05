@@ -14,6 +14,7 @@ setup(
     install_requires=['intake', 'pandas', 'requests', 'pydantic', 'isodate', 'appdirs'],
     long_description="",
     entry_points={
+        'console_scripts': ['intake-ids-periodic-cleanup = intake_ids.cli.periodic:main'],
         'intake.drivers': [
             'connector_csv = intake_ids:ConnectorCSVSource',
             'connector = intake_ids.catalog:ConnectorCatalog'

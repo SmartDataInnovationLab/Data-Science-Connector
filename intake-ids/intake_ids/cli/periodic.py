@@ -33,7 +33,7 @@ def periodic_cleanup(cachedir: str):
     
     print("Cleared %d agreements/artifacts from the cache" % count)
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--cachedir', help="Cache location to manage. Default value is the environment variable \"INTAKE_IDS_CACHE_DIR\" or if it does not exist, " + DEFAULT_CACHE_DIR, default=CACHE_DIR)
     args = parser.parse_args()
