@@ -56,12 +56,17 @@ class Cache():
             contract = self._get_agreement(partition)
             artifact = self._get_artifact_metadata(partition)
 
-            return is_contract_valid_for_artifact(contract, artifact)
+            retval = is_contract_valid_for_artifact(contract, artifact)
         except (ValidationError, OSError) as e:
             # print("validation failed")
             # print(e)
             self.clear(partition)
-            return False
+            retval = False
+        finally:
+            if retval == False:
+                self.clear(partition)
+            return retval
+
 
     def clear(self, partition: int) -> None:
         display('Clearing')
