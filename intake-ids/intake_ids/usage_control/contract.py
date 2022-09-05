@@ -1,9 +1,11 @@
+from ..debug import *
 from ..ids_information_model.contract import Contract
 from ..ids_information_model.artifact import Artifact
 from .rule import get_pattern_by_rule
 from .pattern import *
-from .validation import is_contract_valid_for_artifact
+from .validation import validate_contract, validate_rule
 from .contract_util import get_rules_from_contract
+from .exceptions import RuleError, ContractError
 
 def is_artifact_cacheable(contract: Contract) -> bool:
     rules = get_rules_from_contract(contract)
@@ -36,3 +38,25 @@ def select_valid_contract_by_preferable_rules(contract_dicts: list[dict], artifa
 
     # no valid contract
     return None
+
+def is_contract_valid_for_artifact(contract: Contract, artifact: Artifact) -> bool:
+    try:
+        # display('validating contract and artifact', contract, artifact)
+        validate_contract(contract)
+        for rule in get_rules_from_contract(contract):
+            validate_rule(rule, artifact)
+        return True
+    except (RuleError, ContractError) as e:
+        return False
+
+    raise RuntimeError('An unexpected state has been reached')
+
+def is_contract_valid(contract: Contract) -> bool:
+    try:
+        # display('validating contract', contract)
+        validate_contract(contract)
+        return True
+    except (ContractError) as e:
+        return False
+
+    raise RuntimeError('An unexpected state has been reached')

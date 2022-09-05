@@ -45,9 +45,12 @@ def get_pattern_by_rule(rule: Rule) -> str:
     
     return OTHER_PATTERN
 
+def get_date(rule: Rule) -> datetime:
+    date_str = _get_right_operand_value(rule.constraint[0].right_operand)
+    return isodate.parse_datetime(date_str)
+
 def get_duration(rule: Rule) -> timedelta:
-    right_operand = rule.constraint[0].right_operand
-    duration_str = _get_right_operand_value(right_operand)
+    duration_str = _get_right_operand_value(rule.constraint[0].right_operand)
     return isodate.parse_duration(duration_str)
 
 def get_interval(rule: Rule) -> tuple[datetime, datetime]:

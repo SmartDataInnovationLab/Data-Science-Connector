@@ -11,7 +11,7 @@ setup(
     license='MIT',
     packages=find_packages(),
     include_package_data=True,
-    install_requires=['intake', 'pandas', 'requests', 'pydantic', 'isodate'],
+    install_requires=['intake', 'pandas', 'requests', 'pydantic', 'isodate', 'appdirs'],
     long_description="",
     entry_points={
         'intake.drivers': [

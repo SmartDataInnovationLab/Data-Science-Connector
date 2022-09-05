@@ -1,13 +1,16 @@
+from .debug import *
 import hashlib
 import json
 import os
 from pathlib import Path
 from pydantic import ValidationError
+from appdirs import user_cache_dir
 from .ids_information_model.contract import Contract
 from .ids_information_model.artifact import Artifact
-from .usage_control.validation import is_contract_valid_for_artifact
+from .usage_control.contract import is_contract_valid_for_artifact
 
-CACHE_DIR = os.environ.get('CACHE_DIR') if os.environ.get('CACHE_DIR') is not None else '.intake-ids-cache'
+DEFAULT_CACHE_DIR = user_cache_dir('intake-ids', 'omeryagmurlu')
+CACHE_DIR = os.environ.get('INTAKE_IDS_CACHE_DIR') if os.environ.get('INTAKE_IDS_CACHE_DIR') is not None else DEFAULT_CACHE_DIR
 AGREEMENT = 'agreement.json'
 ARTIFACT = 'artifact.dat'
 ARTIFACT_META = 'artifact.json'
@@ -27,13 +30,17 @@ def save_jsonfile(path: Path, obj: dict):
             json.dump(obj, f, ensure_ascii=False, indent=4)
 
 class Cache():
-    def __init__(self, consumer_url, provider_url, resource_url, representation_url) -> None:
-        self.con_h = hash(consumer_url)
-        self.pro_h = hash(provider_url)
-        self.res_h = hash(resource_url)
-        self.rep_h = hash(representation_url)
+    def __init__(self,
+        consumer_url:str = None, provider_url:str = None, resource_url:str = None, representation_url:str = None,
+        consumer_hash:str = None, provider_hash:str = None, resource_hash:str = None, representation_hash:str = None,
+        cache_dir=CACHE_DIR
+    ) -> None:
+        self.con_h = consumer_hash if consumer_hash is not None else hash(consumer_url)
+        self.pro_h = provider_hash if provider_hash is not None else hash(provider_url)
+        self.res_h = resource_hash if resource_hash is not None else hash(resource_url)
+        self.rep_h = representation_hash if representation_hash is not None else hash(representation_url)
 
-        self.path: Path = Path(CACHE_DIR) / self.con_h / self.pro_h / self.res_h / self.rep_h
+        self.path: Path = Path(cache_dir) / self.con_h / self.pro_h / self.res_h / self.rep_h
 
     def _partition(self, partition: int) -> Path:
         return self.path / str(partition)

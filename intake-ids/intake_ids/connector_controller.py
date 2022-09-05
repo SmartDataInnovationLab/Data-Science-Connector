@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .debug import *
 import json
 from typing import Any
 from pydantic import ValidationError
@@ -10,9 +11,8 @@ from .resourceapi import ResourceApi
 from .cache import Cache
 from .ids_information_model.contract import Contract
 from .ids_information_model.artifact import Artifact
-from .usage_control.contract import is_artifact_cacheable, select_valid_contract_by_preferable_rules
+from .usage_control.contract import is_artifact_cacheable, select_valid_contract_by_preferable_rules, is_contract_valid_for_artifact
 from .exceptions import ConnectorError, raise_for_connector_status
-from .usage_control.validation import is_contract_valid_for_artifact
 
 
 def driver_args(representation, resource, provider_url, consumer_url):
@@ -121,7 +121,7 @@ class AccessModality:
         display('Trying to write new artifact to cache')
         with self._controller.consumerResources.stream_data(self._artifact_id) as r:
             raise_for_connector_status(r)
-            print('streaming to cache')
+            display('streaming to cache')
             self._controller.cache.cache_artifact(r, self._partition)
         
         return self._controller.cache.get_artifact_filename(self._partition)

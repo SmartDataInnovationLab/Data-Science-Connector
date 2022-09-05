@@ -2,32 +2,11 @@ from datetime import datetime
 from ..ids_information_model.contract import Contract
 from ..ids_information_model.artifact import Artifact
 from ..ids_information_model.rule import Rule
+from ..ids_information_model.permission import Permission
+from ..ids_information_model.action import DELETE
 from .exceptions import RuleError, ContractError
-from .contract_util import get_rules_from_contract
-from .rule import get_pattern_by_rule, get_duration, get_interval
+from .rule import get_pattern_by_rule, get_duration, get_interval, get_date
 from .pattern import *
-
-def is_contract_valid_for_artifact(contract: Contract, artifact: Artifact) -> bool:
-    try:
-        # display('validating contract and artifact', contract, artifact)
-        validate_contract(contract)
-        for rule in get_rules_from_contract(contract):
-            validate_rule(rule, artifact)
-        return True
-    except (RuleError, ContractError) as e:
-        return False
-
-    raise RuntimeError('An unexpected state has been reached')
-
-def is_contract_valid(contract: Contract) -> bool:
-    try:
-        # display('validating contract', contract)
-        validate_contract(contract)
-        return True
-    except (ContractError) as e:
-        return False
-
-    raise RuntimeError('An unexpected state has been reached')
 
 def validate_contract(contract: Contract):
     validate_contract_dates(contract)
@@ -38,12 +17,13 @@ def validate_contract_dates(contract: Contract):
 
 def validate_rule(rule: Rule, artifact: Artifact):
     pattern = get_pattern_by_rule(rule)
+
     if pattern == PROVIDE_ACCESS:
-        return
+        pass
     elif pattern == OTHER_PATTERN:
         # we only process a subset of patterns, and ignore the rest, they are not saved in the cache either (see contract.py#is_artifact_cacheable) and therefore requested from the connector everytime.
         # therefore ignore them in the validation
-        return
+        pass
     elif pattern == PROHIBIT_ACCESS:
         raise RuleError('Access is prohibited')
     elif pattern == DURATION_USAGE:
@@ -52,6 +32,8 @@ def validate_rule(rule: Rule, artifact: Artifact):
         validate_rule_interval(rule)
     else:
         raise RuntimeError('An unexpected state has been reached')
+    
+    validate_rule_postduties(rule)
 
 def validate_rule_duration(rule: Rule, artifact: Artifact):
     tdelta = get_duration(rule)
@@ -67,3 +49,18 @@ def validate_rule_interval(rule: Rule):
 
     if (datetime.now(end.tzinfo) > end or datetime.now(start.tzinfo) < start):
         raise RuleError('Access interval is either not entered yet, or is already over')
+
+def validate_rule_postduties(rule: Rule):
+    if not isinstance(rule, Permission):
+        return
+    
+    for duty in rule.post_duty:
+        # validate deletions
+        validate_rule_post_duty_delete(duty)
+                
+def validate_rule_post_duty_delete(duty: Rule):
+    for action in duty.action:
+        if action.id == DELETE.id:
+            deletion_date = get_date(duty)
+            if datetime.now(deletion_date.tzinfo) > deletion_date:
+                raise RuleError('Deletion date for the artifact has passed')
