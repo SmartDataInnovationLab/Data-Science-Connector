@@ -1,13 +1,9 @@
 from __future__ import annotations
 from .debug import *
 import json
-from typing import Any
 from pydantic import ValidationError
 
-from copy import deepcopy
-
-from .idsapi import IdsApi
-from .resourceapi import ResourceApi
+from .vendor.idsapi import IdsApi
 from .cache import Cache
 from .ids_information_model.contract import Contract
 from .ids_information_model.artifact import Artifact
@@ -30,7 +26,6 @@ class ConnectorController():
         self.resource = resource_url
         self.representation = representation_url
         self.consumer = IdsApi(consumer_url)
-        self.consumerResources = ResourceApi(consumer_url)
         self.cache = Cache(consumer_url, provider_url, resource_url, representation_url)
 
     def _get_artifacts(self):
@@ -119,7 +114,7 @@ class AccessModality:
             raise ConnectorError('Agreement for the resource is not valid')
 
         display('Trying to write new artifact to cache')
-        with self._controller.consumerResources.stream_data(self._artifact_id) as r:
+        with self._controller.consumer.stream_data(self._artifact_id) as r:
             raise_for_connector_status(r)
             display('streaming to cache')
             self._controller.cache.cache_artifact(r, self._partition)
@@ -128,7 +123,7 @@ class AccessModality:
 
     def inmemory(self):
         display('We are NOT a cacheable artifact')
-        r = self._controller.consumerResources.get_data(self._artifact_id)
+        r = self._controller.consumer.get_data(self._artifact_id)
         raise_for_connector_status(r)
         print('bypassed cache')
         return r.content

@@ -1,20 +1,18 @@
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
-from intake_ids.connector_controller import driver_args
-from intake_ids.sources import get_source_for_representation
+from .connector_controller import driver_args
+from .sources import get_source_for_representation
 
-from .resourceapi import ResourceApi
-from .idsapi import IdsApi
+from .vendor.idsapi import IdsApi
 
 class ConnectorCatalog(Catalog):
     # if only one catalog in ids, use it. otherwise load all
-    def __init__(self, provider_url, consumer_url, name, catalog_id=None, metadata=None, **kwargs):
+    def __init__(self, provider_url, consumer_url, name, auth=("admin", "password"), catalog_id=None, metadata=None, **kwargs):
         self.provider_url = provider_url
         self.consumer_url = consumer_url
         self.catalog_id = catalog_id
 
-        self.consumer = IdsApi(consumer_url)
-        self.consumerResources = ResourceApi(consumer_url)
+        self.consumer = IdsApi(consumer_url, auth)
         self.recipient_url = self.provider_url + "/api/ids/data"
 
         self._offers = {}
