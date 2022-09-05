@@ -11,21 +11,22 @@ from .usage_control.contract import is_artifact_cacheable, select_valid_contract
 from .exceptions import ConnectorError, raise_for_connector_status
 
 
-def driver_args(representation, resource, provider_url, consumer_url):
+def driver_args(representation, resource, provider_url, consumer_url, auth):
     return {
         "provider_url": provider_url,
         "consumer_url": consumer_url,
         "representation_url": representation['@id'],
         "resource_url": resource['@id'],
+        "auth": auth,
     }
 
 class ConnectorController():
-    def __init__(self, provider_url, consumer_url, resource_url, representation_url):
+    def __init__(self, provider_url, consumer_url, resource_url, representation_url, auth: tuple[str, str]):
         self.provider_url = provider_url
         self.consumer_url = consumer_url
         self.resource = resource_url
         self.representation = representation_url
-        self.consumer = IdsApi(consumer_url)
+        self.consumer = IdsApi(consumer_url, auth)
         self.cache = Cache(consumer_url, provider_url, resource_url, representation_url)
 
     def _get_artifacts(self):

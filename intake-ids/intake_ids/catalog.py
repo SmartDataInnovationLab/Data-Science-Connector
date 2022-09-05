@@ -7,11 +7,12 @@ from .vendor.idsapi import IdsApi
 
 class ConnectorCatalog(Catalog):
     # if only one catalog in ids, use it. otherwise load all
-    def __init__(self, provider_url, consumer_url, name, auth=("admin", "password"), catalog_id=None, metadata=None, **kwargs):
+    def __init__(self, provider_url, consumer_url, name, auth, catalog_id=None, metadata=None, **kwargs):
         self.provider_url = provider_url
         self.consumer_url = consumer_url
         self.catalog_id = catalog_id
 
+        self.auth = auth
         self.consumer = IdsApi(consumer_url, auth)
         self.recipient_url = self.provider_url + "/api/ids/data"
 
@@ -48,16 +49,17 @@ class ConnectorCatalog(Catalog):
                 representation = repr,
                 resource = resource,
                 provider_url = self.provider_url,
-                consumer_url = self.consumer_url
+                consumer_url = self.consumer_url,
+                auth = self.auth
             )
         
 def is_processable_representation(repr):
     return get_source_for_representation(repr) is not None
 
 class ConnectorEntry(LocalCatalogEntry):
-    def __init__(self, representation, resource, provider_url, consumer_url):
+    def __init__(self, representation, resource, provider_url, consumer_url, auth):
         driver, args = get_source_for_representation(representation)
-        connector_args = driver_args(representation, resource, provider_url, consumer_url)
+        connector_args = driver_args(representation, resource, provider_url, consumer_url, auth)
         name = representation['@id']
         description = f"""{resource['ids:title'][0]['@value']}
 {resource['ids:description'][0]['@value']}"""
