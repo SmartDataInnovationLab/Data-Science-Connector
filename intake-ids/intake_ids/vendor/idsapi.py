@@ -27,6 +27,7 @@ class IdsApi:
     def __init__(self, recipient, auth):
         self.session = requests.Session()
         self.session.auth = auth
+        # this is bad, don't verify ssl
         self.session.verify = False
 
         self.recipient = recipient
