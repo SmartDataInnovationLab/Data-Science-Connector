@@ -63,4 +63,5 @@ class ConnectorEntry(LocalCatalogEntry):
         name = representation['@id']
         description = f"""{resource['ids:title'][0]['@value']}
 {resource['ids:description'][0]['@value']}"""
-        super().__init__(name, description, driver, True, args={ **args, 'ids_kwargs': connector_args })
+        metadata = {'resource': resource, 'representation': representation}
+        super().__init__(name, description, driver, True, args={ **args, 'ids_kwargs': connector_args }, metadata=metadata)

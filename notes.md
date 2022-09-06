@@ -45,6 +45,8 @@
     - idsa position paper usage control:
         - 34 table
         - 26 leaks
+    - intake dcat
+        - for it's readme and catalog impl
 
 - use cases:
     - first partition provide access, later until deletion / duration
