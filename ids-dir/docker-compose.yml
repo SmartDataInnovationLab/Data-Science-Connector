@@ -1,16 +1,17 @@
 version: "3.9"
 services:
-  provider:
+  providerPLACEHOLDER_SUBNETID:
     image: ghcr.io/international-data-spaces-association/dataspace-connector:7.1.0
     container_name: providerPLACEHOLDER_SUBNETID
     networks:
       baPLACEHOLDER_SUBNETID:
-  consumer:
+        ipv4_address: 172.23.PLACEHOLDER_SUBNETID.10
+  consumerPLACEHOLDER_SUBNETID:
     image: ghcr.io/international-data-spaces-association/dataspace-connector:7.1.0
     container_name: consumerPLACEHOLDER_SUBNETID
     networks:
       baPLACEHOLDER_SUBNETID:
-  openssh-server:
+  openssh-serverPLACEHOLDER_SUBNETID:
     image: lscr.io/linuxserver/openssh-server:latest
     container_name: openssh-serverPLACEHOLDER_SUBNETID
     environment:
@@ -20,16 +21,17 @@ services:
     volumes:
       - ./ssh-workaround/88-enable_forwarding:/etc/cont-init.d/88-enable_forwarding:ro
       # # - /etc/hosts:/etc/hosts:ro
+    network_mode: service:colab-localPLACEHOLDER_SUBNETID
+    depends_on:
+      - colab-localPLACEHOLDER_SUBNETID
+  colab-localPLACEHOLDER_SUBNETID:
+    build: ./colab-local-runtime-docker
+    container_name: colab-localPLACEHOLDER_SUBNETID
+    ports:
+      - PLACEHOLDER_SSH_PORT:2222
     networks:
       baPLACEHOLDER_SUBNETID:
         ipv4_address: 172.23.PLACEHOLDER_SUBNETID.22
-
-  colab-local:
-    build: ./colab-local-runtime-docker
-    container_name: colab-localPLACEHOLDER_SUBNETID
-    networks:
-      baPLACEHOLDER_SUBNETID:
-        ipv4_address: 172.23.PLACEHOLDER_SUBNETID.88
 
 networks:
   baPLACEHOLDER_SUBNETID:

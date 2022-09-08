@@ -1,9 +1,10 @@
+import os
 from datetime import datetime
-from fastapi import Security, Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security.api_key import APIKey
 
 from starlette.status import HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST, HTTP_200_OK
-from starlette.responses import Response
+from starlette.responses import Response, FileResponse
 
 from .model.user import User
 from .model.instance import Instance
@@ -12,17 +13,21 @@ from .db import db
 from .constants import *
 from .internal.instance import create_instance, stop_instance
 
+INDEX = os.path.join(os.path.dirname(__file__), 'www', 'index.html')
+
 def main():
     app = FastAPI()
     db.init_db()
 
     @app.get("/")
     def root():
-        return {"message": "Hello World"}
+        return FileResponse(INDEX)
     
     @app.get("/config")
     def GET_config():
-        return {"config": "Covigg World"}
+        return {
+            
+        }
 
     @app.get("/user")
     def GET_user(user: User = Depends(get_user)):
@@ -77,6 +82,5 @@ def main():
             db.queries.instances.remove_by_token(conn, instance.user_token)
         
         return Response(status_code=HTTP_200_OK)
-
 
     return app

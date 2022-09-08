@@ -8,10 +8,17 @@ MAX_ID = 254
 VALIDITY_DURATION = timedelta(minutes=30)
 SSH_USERNAME_LEN = 8
 SSH_PASS_LEN = 8
-
-PLACEHOLDER_SUBNETID = 'PLACEHOLDER_SUBNETID'
-PLACEHOLDER_SSH_PASS = 'PLACEHOLDER_SSH_PASS'
-PLACEHOLDER_SSH_USER = 'PLACEHOLDER_SSH_USER'
+SSH_PORT_START = 43400
 
 def instance_path(id: int, token: str) -> Path:
     return Path(DATA_PATH) / str(id) / token
+
+def ssh_workaround_path(path: Path) -> Path:
+    return path / 'ssh-workaround' / '88-enable_forwarding'
+
+def provider_url(id: int):
+    return 'https://172.23.' + str(id) + '.10:8080'
+
+CONFIG = {
+
+}

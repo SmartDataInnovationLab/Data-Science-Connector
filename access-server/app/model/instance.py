@@ -9,4 +9,5 @@ class Instance(BaseModel):
     user_token: str
     ssh_user: str
     ssh_pass: str
+    ssh_port: str
     

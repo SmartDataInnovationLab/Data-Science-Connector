@@ -8,5 +8,6 @@ CREATE TABLE IF NOT EXISTS instances (
     user_token text NOT NULL UNIQUE,
     ssh_user text NOT NULL,
     ssh_pass text NOT NULL,
+    ssh_port text NOT NULL,
     FOREIGN KEY (user_token) REFERENCES users (token)
 );
