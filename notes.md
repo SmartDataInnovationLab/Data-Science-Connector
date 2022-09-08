@@ -50,3 +50,14 @@
 
 - use cases:
     - first partition provide access, later until deletion / duration
+
+
+------
+ ids people: only non-blind
+ - use time limit,after that upl their notebooks/check errs
+ -
+
+
+
+ ------
+ webserver for ssh-enclave creation

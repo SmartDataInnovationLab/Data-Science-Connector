@@ -1,4 +1,5 @@
 .intake-ids-cache
+access-server-data
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

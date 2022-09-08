@@ -1,0 +1,4 @@
+pysqlite3==0.4.7
+fastapi==0.82.0
+aiosql==6.4
+uvicorn==0.18.3
