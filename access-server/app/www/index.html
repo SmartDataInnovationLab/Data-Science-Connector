@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    
+    <title>Access Server</title>
+    <style>
+        html,
+        body {
+        height: 100%;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+        max-width: 1400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 15px;
+        background-color: #f5f5f5;
+        }
+
+        .form {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form .form-floating:focus-within {
+            z-index: 2;
+        }
+
+        .row-container {
+            
+        }
+    </style>
+
+    <script type="text/javascript">
+        window._accTok = {} 
+        window._userInfo = {}
+        window._instInfo = {}
+        
+        window.saveAccTok = async function() {
+            window._accTok = document.getElementById('accessToken').value
+            window._config = await (await fetch('/config')).json()
+            window._userInfo = (await (await fetch(`/user?access_token=${window._accTok}`)).json())
+            window._instInfo = (await (await fetch(`/instance?access_token=${window._accTok}`)).json())
+            console.log(window._userInfo)
+            document.getElementById('username').innerText = window._userInfo.name
+            document.getElementById('token').innerText = window._userInfo.token
+            updInst()
+            updButtonDisabled()
+            // document.getElementById('page1').style.display = 'none'
+            // document.getElementById('page2').style.display = 'block'
+        }
+
+        window.reqInst = async function() {
+            // document.getElementById('reqInst').style.display = 'none'
+            window._instInfo = await (await fetch(`/instance?access_token=${window._accTok}`, { method: 'PUT' })).json()
+            updInst()
+            updButtonDisabled()
+        }
+
+        window.delInst = async function() {
+            // document.getElementById('reqInst').style.display = 'none'
+            window._instInfo = await (await fetch(`/instance?access_token=${window._accTok}`, { method: 'DELETE' })).text() | {}
+            document.getElementById('id').innerText = ""
+            document.getElementById('start_date').innerText = ""
+            document.getElementById('end_date').innerText = ""
+            document.getElementById('ssh_user').innerText = ""
+            document.getElementById('ssh_pass').innerText = ""
+            document.getElementById('ssh_host').innerText = ""
+            document.getElementById('ssh_port').innerText = ""
+            updButtonDisabled()
+        }
+
+        const updInst = () => {
+            if (!(window._instInfo && window._instInfo.ssh_user))
+                return;
+            document.getElementById('id').innerText = window._instInfo.id
+            document.getElementById('start_date').innerText = window._instInfo.start_date
+            document.getElementById('end_date').innerText = window._instInfo.end_date
+            document.getElementById('ssh_user').innerText = window._instInfo.ssh_user
+            document.getElementById('ssh_pass').innerText = window._instInfo.ssh_pass
+            document.getElementById('ssh_host').innerText = window._config.SSH_HOST
+            document.getElementById('ssh_port').innerText = window._instInfo.ssh_port
+        }
+
+        const updButtonDisabled = () => {
+            document.getElementById('reqInst').disabled = !!(window._instInfo && window._instInfo.ssh_user)
+            document.getElementById('delInst').disabled = !(window._instInfo && window._instInfo.ssh_user)
+        }
+    </script>
+</head>
+<body class="row m-auto">
+    <main class="form col-12 col-lg-9">
+        <h1 class="h1 mb-3 fw-normal">Usability study for an intake based IDS Connector client</h1>
+        <h4 class="h4 mb-3 fw-normal">Background</h4>
+        <p>International Data Spaces standards enable technical, legal and organizational interoperability when sharing private data sets with across companies.
+            Dataspace Connectors for IDS have been developed, but require considerable knowledge for set-up and integration.
+            On the other hand most data-science research revolves around the use of lightweight technology.
+            Data innovation labs like SDIL offer rapid turnover and facilitates collaborative research and innovation on data and offer "clean room" environments that are safe by design.</p>
+        <h6 class="h6 mb-3 fw-normal">Problem statement</h6>
+        <p>Precompetitive environments like data innovation labs and competitive operational environments differ fundamentally in their workflows.
+            Porting concepts like IDS Connectors to precompetitive enviroments, as well as operating precompetitive environments with IDS technology is difficult.</p>
+        <h6 class="h6 mb-3 fw-normal">Thesis idea</h6>
+        <p>This thesis aims to build up a prototype platform that bring both concepts together by acting as .</p>
+        </main>
+        </main>
+    <main class="form col-12 col-lg-3" id="page1">
+        <h4 class="h4 mb-3 fw-normal">Access Token</h4>
+        
+        <div class="form-floating">
+            <input class="form-control" id="accessToken">
+            <label for="accessToken">Access Token</label>
+        </div>
+        
+        <button class="w-100 btn btn-lg btn-primary" onclick="window.saveAccTok()">Save</button>
+
+        <hr/>
+
+        <h4 class="h4 mb-3 fw-normal">User Info</h4>
+        
+        <div>
+            <div>Name: <span id="username"></span></div>
+            <div class="mb-3">Token: <span id="token"></span></div>
+        </div>
+        
+        <button disabled id="reqInst" class="w-100 btn btn-lg btn-primary" onclick="window.reqInst()">New Instance</button>
+        <small>This may take ~20 seconds</small>
+
+        <hr/>
+
+        <h4 class="h4 mb-3 fw-normal">Instance Info</h4>
+        
+        <div>
+            <div>Id: <span id="id"></span></div>
+            <div>Start Date: <span id="start_date"></span></div>
+            <div>End Date: <span id="end_date"></span></div>
+            <div>SSH User: <span id="ssh_user"></span></div>
+            <div>SSH Password: <span id="ssh_pass"></span></div>
+            <div>SSH Host: <span id="ssh_host"></span></div>
+            <div class="mb-3">SSH Port: <span id="ssh_port"></span></div>
+        </div>
+
+        <button disabled id="delInst" class="w-100 btn btn-lg btn-danger" onclick="window.delInst()">Delete Instance</button>
+        <small>This may take ~10 seconds</small>
+    </main>
+</body>
+</html>

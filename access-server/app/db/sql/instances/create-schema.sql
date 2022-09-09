@@ -11,3 +11,9 @@ CREATE TABLE IF NOT EXISTS instances (
     ssh_port text NOT NULL,
     FOREIGN KEY (user_token) REFERENCES users (token)
 );
+
+CREATE TABLE IF NOT EXISTS busyness (
+    busy bit NOT NULL,
+    user_token text PRIMARY KEY,
+    FOREIGN KEY (user_token) REFERENCES users (token)
+);

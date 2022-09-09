@@ -38,7 +38,7 @@ def main():
         return instance
 
     @app.put("/instance")
-    def PUT_instance(user: User = Depends(get_user), instance: Instance = Depends(get_instance)):
+    def PUT_instance(user: User = Depends(get_user), instance: Instance = Depends(get_instance), busy: int = Depends(check_busy)):
         if instance is not None:
             raise HTTPException(
                 status_code=HTTP_409_CONFLICT, detail="Instance exists"
@@ -46,40 +46,54 @@ def main():
         print(instance)
 
         with db.get_db() as conn:
-            idlist = [ int(x['id']) for x in db.queries.instances.get_all_ids(conn)]
-            free = list(set(range(0, MAX_ID)) - set(idlist))
-            
-            if len(free) <= 0:
-                raise HTTPException(
-                    status_code=HTTP_400_BAD_REQUEST, detail="Maximum number of instances, try again later"
+            try:
+                print('set busy')
+                db.queries.instances.change_busy(conn, busy=1, user_token=user.token)
+                idlist = [ int(x['id']) for x in db.queries.instances.get_all_ids(conn)]
+                free = list(set(range(0, MAX_ID)) - set(idlist))
+                
+                if len(free) <= 0:
+                    raise HTTPException(
+                        status_code=HTTP_400_BAD_REQUEST, detail="Maximum number of instances, try again later"
+                    )
+                
+                print(free[0])
+                
+                new_instance = create_instance(id=free[0], start_date=datetime.now(), user_token=user.token)
+                if new_instance is None:
+                    raise HTTPException(
+                        status_code=HTTP_400_BAD_REQUEST, detail="Can't create new instance (err code 56951411)"
+                    )
+                count = db.queries.instances.insert(
+                    conn, **((new_instance.dict)())
                 )
-            
-            print(free[0])
-            
-            new_instance = create_instance(id=free[0], start_date=datetime.now(), user_token=user.token)
-            if new_instance is None:
-                raise HTTPException(
-                    status_code=HTTP_400_BAD_REQUEST, detail="Can't create new instance (err code 56951411)"
-                )
-            count = db.queries.instances.insert(
-                conn, **((new_instance.dict)())
-            )
 
-            print(count)
+                print(count)
+            except Exception as e:
+                raise e
+            finally:
+                print('UNset busy')
+                db.queries.instances.change_busy(conn, busy=0, user_token=user.token)
         
         return new_instance
 
     @app.delete("/instance")
-    def DELETE_instance(instance: Instance = Depends(get_instance)):
+    def DELETE_instance(instance: Instance = Depends(get_instance), busy: bool = Depends(check_busy)):
         if instance is None:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST, detail="Instance does not exist"
             )
 
         with db.get_db() as conn:
-            stop_instance(instance)
+            try:
+                db.queries.instances.change_busy(conn, busy=1, user_token=instance.user_token)
+                stop_instance(instance)
 
-            db.queries.instances.remove_by_token(conn, instance.user_token)
+                db.queries.instances.remove_by_token(conn, instance.user_token)
+            except Exception as e:
+                raise e
+            finally:
+                db.queries.instances.change_busy(conn, busy=0, user_token=instance.user_token)
         
         return Response(status_code=HTTP_200_OK)
 
