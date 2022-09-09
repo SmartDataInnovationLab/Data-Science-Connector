@@ -1,5 +1,6 @@
 .intake-ids-cache
 access-server-data
+db.sqlite
 *.sqlite
 
 # Byte-compiled / optimized / DLL files

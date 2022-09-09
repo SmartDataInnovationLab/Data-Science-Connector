@@ -25,9 +25,7 @@ def main():
     
     @app.get("/config")
     def GET_config():
-        return {
-            
-        }
+        return CONFIG
 
     @app.get("/user")
     def GET_user(user: User = Depends(get_user)):

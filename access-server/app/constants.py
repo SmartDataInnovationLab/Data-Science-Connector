@@ -20,5 +20,9 @@ def provider_url(id: int):
     return 'https://172.23.' + str(id) + '.10:8080'
 
 CONFIG = {
-    'SSH_HOST': 'httpssomething'
+    'SSH_HOST': 'httpssomething',
+    'IDS_PROVIDER_PREFIX': 'https://provider',
+    'IDS_PROVIDER_POSTFIX': ':8080',
+    'IDS_CONSUMER_PREFIX': 'https://consumer',
+    'IDS_CONSUMER_POSTFIX': ':8080',
 }
