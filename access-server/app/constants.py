@@ -1,8 +1,12 @@
 from pathlib import Path
 from datetime import timedelta
+import appdirs
 
-DATA_PATH = './access-server-data'
-DB_FILE_PATH='./db.sqlite'
+dir = Path(appdirs.user_data_dir('access-server-for-intake-ids-user-study'))
+dir.mkdir(parents=True, exist_ok=True)
+
+DATA_PATH = dir / 'access-server-data'
+DB_FILE_PATH = dir / 'db.sqlite'
 API_KEY_NAME = "access_token"
 MAX_ID = 254
 VALIDITY_DURATION = timedelta(minutes=30)
