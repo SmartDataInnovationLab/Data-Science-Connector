@@ -6,7 +6,7 @@ from app.main import main, periodic
 
 app = main()
 
-PERIODIC_TICK = 1
+PERIODIC_TICK = 60
 
 def periodic_task():
     while True:
