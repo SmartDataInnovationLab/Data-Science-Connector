@@ -53,7 +53,7 @@
 
 
 ------
- ids people: only non-blind
+ ids participants: only non-blind
  - use time limit,after that upl their notebooks/check errs
  -
 
