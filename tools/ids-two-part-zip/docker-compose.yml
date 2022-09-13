@@ -1,4 +1,4 @@
-version: "3.9"
+version: "3.0"
 services:
   providerPLACEHOLDER_SUBNETID:
     image: ghcr.io/international-data-spaces-association/dataspace-connector:7.1.0
