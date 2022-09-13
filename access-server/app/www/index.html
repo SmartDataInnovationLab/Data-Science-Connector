@@ -43,6 +43,21 @@
         window._accTok = {} 
         window._userInfo = {}
         window._instInfo = {}
+
+        window.register = async function() {
+            const regName = document.getElementById('registerName').value
+
+            const token = (await (await fetch('/user', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: regName }),
+            })).json())
+            
+            document.getElementById('accessToken').value = token
+            window.saveAccTok()
+        }
         
         window.saveAccTok = async function() {
             window._accTok = document.getElementById('accessToken').value
@@ -54,8 +69,6 @@
             document.getElementById('token').innerText = window._userInfo.token
             updInst()
             updButtonDisabled()
-            // document.getElementById('page1').style.display = 'none'
-            // document.getElementById('page2').style.display = 'block'
         }
 
         window.reqInst = async function() {
@@ -127,7 +140,7 @@
             From within their Jupyter instance, you can reach the IDS Connector of the Data Provider (right panel)</p>
         <p><strong>Note:</strong> For the purposes of this study, you don't need to concern yourselves with the auth mechanisms of IDS. Consumer connector is using the default admin/password combo and auth with provider is taken care of.</p>
         <h6 class="h6 mb-3 fw-normal">Methodology</h6>
-        <p>In the form on the right side, enter your access token and click 'Save'. In order to create a new VM with SSH/Jupyter/local IDS connector, press the 'New Instance' button.
+        <p>In the form on the right side, register, or if you already have an access token, enter it and click 'Save'. In order to create a new VM with SSH/Jupyter/local IDS connector, press the 'New Instance' button.
         Then use the following command to forward the hosted Jupyter instance in VM to your localhost:</p>
         <code>ssh [SSH User]@[SSH Host] -C -N -p [SSH PORT] -L 8888:localhost:8888</code>
         <p>Now you can connect to the Jupyter instance on iSpace using the local runtime option on Google Colab. If you are in the <strong>control group</strong>,
@@ -138,6 +151,18 @@
         <p>Continue from the Colab document.</p>
     </main>
     <main class="form col-12 col-lg-3" id="page1">
+        <h4 class="h4 mb-3 fw-normal">Registration</h4>
+        <small>If you already have an access token, skip to the next step.</small>
+
+        <div class="form-floating">
+            <input class="form-control" id="registerName">
+            <label for="registerName">Name</label>
+        </div>
+
+        <button class="w-100 btn btn-lg btn-primary" onclick="window.register()">Register</button>
+
+        <hr/>
+
         <h4 class="h4 mb-3 fw-normal">Access Token</h4>
         
         <div class="form-floating">

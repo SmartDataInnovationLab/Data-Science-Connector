@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
-class User(BaseModel):
-    token: str
+class UserRequest(BaseModel):
     name: str
+
+class User(UserRequest):
+    token: str

@@ -1,4 +1,5 @@
 import os
+import uuid
 from datetime import datetime
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security.api_key import APIKey
@@ -6,7 +7,7 @@ from fastapi.security.api_key import APIKey
 from starlette.status import HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST, HTTP_200_OK
 from starlette.responses import Response, FileResponse
 
-from .model.user import User
+from .model.user import User, UserRequest
 from .model.instance import Instance
 from .deps import *
 from .db import db
@@ -30,6 +31,15 @@ def main():
     @app.get("/user")
     def GET_user(user: User = Depends(get_user)):
         return user
+
+    @app.put("/user")
+    def PUT_user(user_request: UserRequest):
+        name = user_request.name
+        token = uuid.uuid4().hex
+
+        with db.get_db() as conn:
+            db.queries.users.insert(conn, name=name, token=token)
+            return token
 
     @app.get("/instance")
     def GET_instance(instance: Instance = Depends(get_instance)):
