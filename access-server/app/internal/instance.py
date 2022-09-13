@@ -71,6 +71,7 @@ def create_instance(id: int, start_date: datetime, user_token: str) -> Instance:
         raise e
 
 def stop_instance(instance: Instance):
+    print('stopping' + str(instance.id) + " " + instance.user_token)
     code = os.system('/usr/bin/bash -c "cd ' + str(instance.path)
         + ' && docker-compose down --remove-orphans"')
 

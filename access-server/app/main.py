@@ -16,6 +16,15 @@ from .internal.instance import create_instance, stop_instance
 
 INDEX = os.path.join(os.path.dirname(__file__), 'www', 'index.html')
 
+def periodic():
+    with db.get_db() as conn:
+        for inst in db.queries.instances.get_all(conn):
+            instance = Instance.parse_obj(inst)
+            if datetime.now(instance.end_date.tzinfo) >= instance.end_date:
+                db.queries.instances.change_busy(conn, busy=1, user_token=instance.user_token)
+                stop_instance(instance)
+                db.queries.instances.remove_by_token(conn, instance.user_token)
+
 def main():
     app = FastAPI()
     db.init_db()
@@ -96,7 +105,6 @@ def main():
             try:
                 db.queries.instances.change_busy(conn, busy=1, user_token=instance.user_token)
                 stop_instance(instance)
-
                 db.queries.instances.remove_by_token(conn, instance.user_token)
             except Exception as e:
                 raise e
