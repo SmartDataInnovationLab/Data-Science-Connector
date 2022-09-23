@@ -39,7 +39,7 @@ def create_instance(id: int, start_date: datetime, user_token: str) -> Instance:
     make_executable(ssh_workaround_path(path))
 
     try:
-        code = os.system('/usr/bin/bash -c "cd ' + str(path)
+        code = os.system('/bin/bash -c "cd ' + str(path)
             + ' && sed -i \'s/PLACEHOLDER_SUBNETID/' + str(id)
             + '/g; s/PLACEHOLDER_SSH_PASS/' + ssh_pass
             + '/g; s/PLACEHOLDER_SSH_USER/' + ssh_user
@@ -72,7 +72,7 @@ def create_instance(id: int, start_date: datetime, user_token: str) -> Instance:
 
 def stop_instance(instance: Instance):
     print('stopping' + str(instance.id) + " " + instance.user_token)
-    code = os.system('/usr/bin/bash -c "cd ' + str(instance.path)
+    code = os.system('/bin/bash -c "cd ' + str(instance.path)
         + ' && docker-compose down --remove-orphans"')
 
     if code != 0:
