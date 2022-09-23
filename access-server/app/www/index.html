@@ -119,6 +119,7 @@
                 document.getElementById('ssh_pass').innerText = ""
                 document.getElementById('ssh_host').innerText = ""
                 document.getElementById('ssh_port').innerText = ""
+                document.getElementById('ssh_command').innerHTML = ""
                 document.getElementById('ids_provider').innerText = ""
                 document.getElementById('ids_consumer').innerText = ""
                 updButtonDisabled()
@@ -135,9 +136,12 @@
                 document.getElementById('ssh_pass').innerText = window._instInfo.ssh_pass
                 document.getElementById('ssh_host').innerText = window._config.SSH_HOST
                 document.getElementById('ssh_port').innerText = window._instInfo.ssh_port
+                document.getElementById('ssh_command').innerText = sshCommand()
                 document.getElementById('ids_provider').innerText = window._config.IDS_PROVIDER_PREFIX + window._instInfo.id + window._config.IDS_PROVIDER_POSTFIX
                 document.getElementById('ids_consumer').innerText = window._config.IDS_CONSUMER_PREFIX + window._instInfo.id + window._config.IDS_CONSUMER_POSTFIX
             }
+
+            const sshCommand = () => `ssh ${window._instInfo.ssh_user}@${window._config.SSH_HOST} -C -N -p ${window._instInfo.ssh_port} -L 8888:localhost:8888`
 
             const updButtonDisabled = () => {
                 reqInstButton.disabled = !!(window._instInfo && window._instInfo.ssh_user)
@@ -169,19 +173,21 @@
         <p>You are given access to iSpace infrastructure using an hosted Jupyter instance (Google Colab with a local runtime for the study).
             iSpace offers you (and everyone else) your own individual virtual machine that comes configured with a local IDS Connector (consumer connector on the right panel),
             an hosted Jupyter instance (instructions below on how to access), and SSH credentials to access the aforementioned two services via port forwarding (see the right panel.)
-            In order to obtain the SSH credentials, you need an access token, which you had obtained previously during registration (this is the access token that I've given you).
+            In order to obtain the SSH credentials, you need an access token, which you obtain by registering (please don't register multiple times, store your access token and use it instead).
             From within their Jupyter instance, you can reach the IDS Connector of the Data Provider (right panel)</p>
         <p><strong>Note:</strong> For the purposes of this study, you don't need to concern yourselves with the auth mechanisms of IDS. Consumer connector is using the default admin/password combo and auth with provider is taken care of.</p>
         <h6 class="h6 mb-3 fw-normal">Methodology</h6>
         <p>In the form on the right side, register, or if you already have an access token, enter it and click 'Save'. In order to create a new VM with SSH/Jupyter/local IDS connector, press the 'New Instance' button.
         Then use the following command to forward the hosted Jupyter instance in VM to your localhost:</p>
         <code>ssh [SSH User]@[SSH Host] -C -N -p [SSH PORT] -L 8888:localhost:8888</code>
-        <p>Now you can connect to the Jupyter instance on iSpace using the local runtime option on Google Colab. If you are in the <strong>control group</strong>,
+        <p>Now you can connect to the Jupyter instance on iSpace using the local runtime option on Google Colab (step-by-step explanation with images below). If you are in the <strong>control group</strong>,
             please use <a href="https://colab.research.google.com/drive/1TFRIGvS8EWfi6UOo3pN3xdGB5616jhWQ?usp=sharing">this notebook on Colab</a>. If you are not, please use
             <a href="https://colab.research.google.com/drive/1OXUFOsNlWHti9roBVR9d8b1IgCdInwDI?usp=sharing">this</a>.</p>
         <p><a href="https://imgur.com/a/tg2bdxa">Here's a step-by-step explanation with images.</a></p>
         <h6 class="h6 mb-3 fw-normal">Objective</h6>
         <p>Continue from the Colab document.</p>
+
+        <p>After completing the instructions in the Colab document, please save a copy of it with your responses and cell output and email it to me. Thank you for your participation.</p>
     </main>
     <main class="form col-12 col-lg-3" id="page1">
         <h4 class="h4 mb-3 fw-normal">Registration</h4>
@@ -234,10 +240,13 @@
             <div>Id: <span id="id"></span></div>
             <div>Start Date: <span id="start_date"></span></div>
             <div>End Date: <span id="end_date"></span></div>
+            <hr/>
             <div>SSH User: <span id="ssh_user"></span></div>
-            <div>SSH Password: <span id="ssh_pass"></span></div>
+            <div><strong>SSH Password: </strong><span id="ssh_pass"></span></div>
             <div>SSH Host: <span id="ssh_host"></span></div>
             <div>SSH Port: <span id="ssh_port"></span></div>
+            <div><strong>SSH Command: </strong><code id="ssh_command"></code></div>
+            <hr/>
             <div>Provider IDS Connector: <span id="ids_provider"></span></div>
             <div class="mb-3">Consumer (iSpace VM) IDS Connector: <span id="ids_consumer"></span></div>
         </div>

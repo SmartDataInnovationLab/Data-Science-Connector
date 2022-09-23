@@ -20,6 +20,7 @@ services:
       - USER_NAME=PLACEHOLDER_SSH_USER
     volumes:
       - ./ssh-workaround/88-enable_forwarding:/etc/cont-init.d/88-enable_forwarding:ro
+      - ./ssh-workaround/banner:/etc/banner:ro
       # # - /etc/hosts:/etc/hosts:ro
     network_mode: service:colab-localPLACEHOLDER_SUBNETID
     depends_on:
