@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+
     
     <title>Access Server</title>
     <style>
@@ -37,79 +38,111 @@
         .form .form-floating:focus-within {
             z-index: 2;
         }
+
+        .btn > [role="status"] {
+            display: none;
+        }
+
+        .btn.active-wait > [role="status"] {
+            display: inline-block;
+        }
     </style>
 
     <script type="text/javascript">
-        window._accTok = {} 
-        window._userInfo = {}
-        window._instInfo = {}
+        window.onload = () => {
+            window._accTok = {} 
+            window._userInfo = {}
+            window._instInfo = {}
 
-        window.register = async function() {
-            const regName = document.getElementById('registerName').value
+            const spinButton = (button, state) => {
+                if (state) button.classList.add('active-wait')
+                else button.classList.remove('active-wait')
+            }
 
-            const token = (await (await fetch('/user', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ name: regName }),
-            })).json())
-            
-            document.getElementById('accessToken').value = token
-            window.saveAccTok()
-        }
-        
-        window.saveAccTok = async function() {
-            window._accTok = document.getElementById('accessToken').value
-            window._config = await (await fetch('/config')).json()
-            window._userInfo = (await (await fetch(`/user?access_token=${window._accTok}`)).json())
-            window._instInfo = (await (await fetch(`/instance?access_token=${window._accTok}`)).json())
-            console.log(window._userInfo)
-            document.getElementById('username').innerText = window._userInfo.name
-            document.getElementById('token').innerText = window._userInfo.token
-            updInst()
-            updButtonDisabled()
-        }
+            const registerButton = document.getElementById("registerButton")
+            const register = async () => {
+                const regName = document.getElementById('registerName').value
+                spinButton(registerButton, true)
+                const token = (await (await fetch('/user', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: regName }),
+                })).json())
+                spinButton(registerButton, false)
+                
+                document.getElementById('accessToken').value = token
+                saveAccTok()
+            }
+            registerButton.addEventListener('click', register)
 
-        window.reqInst = async function() {
-            // document.getElementById('reqInst').style.display = 'none'
-            window._instInfo = await (await fetch(`/instance?access_token=${window._accTok}`, { method: 'PUT' })).json()
-            updInst()
-            updButtonDisabled()
-        }
+            const saveAccTokButton = document.getElementById("saveAccTokButton")
+            const saveAccTok = async () => {
+                window._accTok = document.getElementById('accessToken').value
+                spinButton(saveAccTokButton, true)
+                window._config = await (await fetch('/config')).json()
+                window._userInfo = (await (await fetch(`/user?access_token=${window._accTok}`)).json())
+                window._instInfo = (await (await fetch(`/instance?access_token=${window._accTok}`)).json())
+                spinButton(saveAccTokButton, false)
+                console.log(window._userInfo)
+                document.getElementById('username').innerText = window._userInfo.name
+                document.getElementById('token').innerText = window._userInfo.token
+                updInst()
+                updButtonDisabled()
+            }
+            saveAccTokButton.addEventListener('click', saveAccTok)
 
-        window.delInst = async function() {
-            // document.getElementById('reqInst').style.display = 'none'
-            window._instInfo = await (await fetch(`/instance?access_token=${window._accTok}`, { method: 'DELETE' })).text() | {}
-            document.getElementById('id').innerText = ""
-            document.getElementById('start_date').innerText = ""
-            document.getElementById('end_date').innerText = ""
-            document.getElementById('ssh_user').innerText = ""
-            document.getElementById('ssh_pass').innerText = ""
-            document.getElementById('ssh_host').innerText = ""
-            document.getElementById('ssh_port').innerText = ""
-            document.getElementById('ids_provider').innerText = ""
-            document.getElementById('ids_consumer').innerText = ""
-            updButtonDisabled()
-        }
+            const reqInstButton = document.getElementById("reqInstButton")
+            const reqInst = async () => {
+                reqInstButton.disabled = !reqInstButton.disabled
+                spinButton(reqInstButton, true)
+                window._instInfo = await (await fetch(`/instance?access_token=${window._accTok}`, { method: 'PUT' })).json()
+                reqInstButton.disabled = !reqInstButton.disabled
+                spinButton(reqInstButton, false)
+                updInst()
+                updButtonDisabled()
+            }
+            reqInstButton.addEventListener('click', reqInst)
 
-        const updInst = () => {
-            if (!(window._instInfo && window._instInfo.ssh_user))
-                return;
-            document.getElementById('id').innerText = window._instInfo.id
-            document.getElementById('start_date').innerText = window._instInfo.start_date
-            document.getElementById('end_date').innerText = window._instInfo.end_date
-            document.getElementById('ssh_user').innerText = window._instInfo.ssh_user
-            document.getElementById('ssh_pass').innerText = window._instInfo.ssh_pass
-            document.getElementById('ssh_host').innerText = window._config.SSH_HOST
-            document.getElementById('ssh_port').innerText = window._instInfo.ssh_port
-            document.getElementById('ids_provider').innerText = window._config.IDS_PROVIDER_PREFIX + window._instInfo.id + window._config.IDS_PROVIDER_POSTFIX
-            document.getElementById('ids_consumer').innerText = window._config.IDS_CONSUMER_PREFIX + window._instInfo.id + window._config.IDS_CONSUMER_POSTFIX
-        }
+            const delInstButton = document.getElementById("delInstButton")
+            const delInst = async () => {
+                delInstButton.disabled = !delInstButton.disabled
+                spinButton(delInstButton, true)
+                window._instInfo = await (await fetch(`/instance?access_token=${window._accTok}`, { method: 'DELETE' })).text() | {}
+                delInstButton.disabled = !delInstButton.disabled
+                spinButton(delInstButton, false)
+                document.getElementById('id').innerText = ""
+                document.getElementById('start_date').innerText = ""
+                document.getElementById('end_date').innerText = ""
+                document.getElementById('ssh_user').innerText = ""
+                document.getElementById('ssh_pass').innerText = ""
+                document.getElementById('ssh_host').innerText = ""
+                document.getElementById('ssh_port').innerText = ""
+                document.getElementById('ids_provider').innerText = ""
+                document.getElementById('ids_consumer').innerText = ""
+                updButtonDisabled()
+            }
+            delInstButton.addEventListener('click', delInst)
 
-        const updButtonDisabled = () => {
-            document.getElementById('reqInst').disabled = !!(window._instInfo && window._instInfo.ssh_user)
-            document.getElementById('delInst').disabled = !(window._instInfo && window._instInfo.ssh_user)
+            const updInst = () => {
+                if (!(window._instInfo && window._instInfo.ssh_user))
+                    return;
+                document.getElementById('id').innerText = window._instInfo.id
+                document.getElementById('start_date').innerText = window._instInfo.start_date
+                document.getElementById('end_date').innerText = window._instInfo.end_date
+                document.getElementById('ssh_user').innerText = window._instInfo.ssh_user
+                document.getElementById('ssh_pass').innerText = window._instInfo.ssh_pass
+                document.getElementById('ssh_host').innerText = window._config.SSH_HOST
+                document.getElementById('ssh_port').innerText = window._instInfo.ssh_port
+                document.getElementById('ids_provider').innerText = window._config.IDS_PROVIDER_PREFIX + window._instInfo.id + window._config.IDS_PROVIDER_POSTFIX
+                document.getElementById('ids_consumer').innerText = window._config.IDS_CONSUMER_PREFIX + window._instInfo.id + window._config.IDS_CONSUMER_POSTFIX
+            }
+
+            const updButtonDisabled = () => {
+                reqInstButton.disabled = !!(window._instInfo && window._instInfo.ssh_user)
+                delInstButton.disabled = !(window._instInfo && window._instInfo.ssh_user)
+            }
         }
     </script>
 </head>
@@ -159,7 +192,10 @@
             <label for="registerName">Name</label>
         </div>
 
-        <button class="w-100 btn btn-lg btn-primary" onclick="window.register()">Register</button>
+        <button class="w-100 btn btn-primary" type="button" id="registerButton">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Register
+        </button>
 
         <hr/>
 
@@ -170,7 +206,10 @@
             <label for="accessToken">Access Token</label>
         </div>
         
-        <button class="w-100 btn btn-lg btn-primary" onclick="window.saveAccTok()">Save</button>
+        <button class="w-100 btn btn-primary" type="button" id="saveAccTokButton">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Save / Refresh
+        </button>
 
         <hr/>
 
@@ -181,7 +220,10 @@
             <div class="mb-3">Token: <span id="token"></span></div>
         </div>
         
-        <button disabled id="reqInst" class="w-100 btn btn-lg btn-primary" onclick="window.reqInst()">New Instance</button>
+        <button disabled class="w-100 btn btn-primary" type="button" id="reqInstButton">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            New Instance
+        </button>
         <small>This may take ~20 seconds</small>
 
         <hr/>
@@ -200,7 +242,10 @@
             <div class="mb-3">Consumer (iSpace VM) IDS Connector: <span id="ids_consumer"></span></div>
         </div>
 
-        <button disabled id="delInst" class="w-100 btn btn-lg btn-danger" onclick="window.delInst()">Delete Instance</button>
+        <button disabled class="w-100 btn btn-danger" type="button" id="delInstButton">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Delete Instance
+        </button>
         <small>This may take ~10 seconds</small>
     </main>
 </body>
