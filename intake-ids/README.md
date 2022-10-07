@@ -8,6 +8,76 @@ A catalog provides a list of processable Resources in an IDS Connector. A Resour
 
 Future formats could include Parquet and JSON.
 
+## Installation
+
+`intake-ids` is published on [PyPI](https://pypi.org/project/intake-ids/).
+You can install it by running the following in your terminal:
+```bash
+pip install intake-ids
+```
+
+You can test the functionality by opening the example notebook in the `examples/` directory.
+
+## Usage
+
+The package can be imported using
+```python
+from intake_ids import ConnectorCatalog
+```
+
+### Loading a catalog
+
+You can load from a remote IDS Connector `provider` by providing the URLs for both the local connector and the remote connector `provider` and the authentication tuple for the local connector:
+```python
+provider_url = "https://provider:8080"
+consumer_url = "https://consumer:8080"
+
+catalog = ConnectorCatalog(provider_url=provider_url, consumer_url=consumer_url, name="testcat", auth=("admin", "password"))
+len(list(catalog))
+```
+
+By default, ConnectorCatalog will combine all "IDS Catalog"s in the connector into one catalog. You can select the "IDS Catalog" using `catalog_id`.
+```python
+catalog_id   = "https://provider:8080/api/catalogs/eda0cda2-10f2-4b39-b462-5d4f2b1bb758"
+
+catalog = ConnectorCatalog(provider_url=provider_url, consumer_url=consumer_url, catalog_id=catalog_id, name="testcat", auth=("admin", "password"))
+```
+
+You can display the resources (items) in the catalog
+```python
+for entry_id, entry in catalog.items():
+    display(entry)
+```
+
+If the catalog has too many entries to comfortably print all at once,
+you can narrow it by searching for a term (e.g. 'motion'):
+```python
+for entry_id, entry in catalog.search('motion').items():
+  display(entry)
+```
+
+### Loading an artifact
+Once you have identified a resource/representation you want to use, you can load it into a dataframe using `read()` or `read_chunked()`:
+
+```python
+df = pd.concat(entry.read_chunked())
+```
+
+or
+
+```python
+df = entry.read()
+```
+
+This will automatically load that dataset into the specified container for the driver for the entry.
+
+## Command line tools
+The plugin provides the `intake-ids-periodic-cleanup` script for periodic validation and cleanup of the cache. You can use the following crontab to run this script every 5 minutes.
+
+```
+*/5 * * * * $HOME/.local/bin/intake-ids-periodic-cleanup
+```
+
 ## Details
 
 Processable (Resource, Representation)-pair entries are then included in the catalog and matched to an available driver specialized for it's type. 
@@ -71,68 +141,4 @@ install_requires =
     isodate>=0.6.1
     appdirs>=1.4.4
 python_requires = >=3.10
-```
-
-## Installation
-
-`intake-ids` is published on [PyPI](https://pypi.org/project/intake-ids/).
-You can install it by running the following in your terminal:
-```bash
-pip install intake-ids
-```
-
-You can test the functionality by opening the example notebook in the `examples/` directory.
-
-## Usage
-
-The package can be imported using
-```python
-from intake_ids import ConnectorCatalog
-```
-
-### Loading a catalog
-
-You can load from a remote IDS Connector `provider` by providing the URLs for both the local connector and the remote connector `provider` and the authentication tuple for the local connector:
-```python
-provider_url = "https://provider:8080"
-consumer_url = "https://consumer:8080"
-
-catalog = ConnectorCatalog(provider_url=provider_url, consumer_url=consumer_url, name="testcat", auth=("admin", "password"))
-len(list(catalog))
-```
-
-By default, ConnectorCatalog will combine all "IDS Catalog"s in the connector into one catalog. You can select the "IDS Catalog" using `catalog_id`.
-```python
-catalog_id   = "https://provider:8080/api/catalogs/eda0cda2-10f2-4b39-b462-5d4f2b1bb758"
-
-catalog = ConnectorCatalog(provider_url=provider_url, consumer_url=consumer_url, catalog_id=catalog_id, name="testcat", auth=("admin", "password"))
-```
-
-You can display the items in the catalog
-```python
-for entry_id, entry in catalog.items():
-    display(entry)
-```
-
-If the catalog has too many entries to comfortably print all at once,
-you can narrow it by searching for a term (e.g. 'motion'):
-```python
-for entry_id, entry in catalog.search('motion').items():
-  display(entry)
-```
-
-### Loading a dataset
-Once you have identified a dataset, you can load it into a dataframe using `read()`:
-
-```python
-df = entry.read()
-```
-
-This will automatically load that dataset into the specified container for the driver for the entry.
-
-## Command line tools
-The plugin provides the `intake-ids-periodic-cleanup` script for periodic validation and cleanup of the cache. You can use the following crontab to run this script every 5 minutes.
-
-```
-*/5 * * * * $HOME/.local/bin/intake-ids-periodic-cleanup
 ```
