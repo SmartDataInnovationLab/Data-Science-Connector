@@ -15,6 +15,7 @@ from .constants import *
 from .internal.instance import create_instance, stop_instance
 
 INDEX = os.path.join(os.path.dirname(__file__), 'www', 'index.html')
+LOCALRUNTIMEPNG = os.path.join(os.path.dirname(__file__), 'www', 'localruntime.png')
 
 def periodic():
     with db.get_db() as conn:
@@ -32,6 +33,10 @@ def main():
     @app.get("/")
     def root():
         return FileResponse(INDEX)
+
+    @app.get("/localruntime.png")
+    def localruntimepng():
+        return FileResponse(LOCALRUNTIMEPNG)
     
     @app.get("/config")
     def GET_config():
